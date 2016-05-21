@@ -69,7 +69,8 @@ public class PlayerMove : MonoBehaviour
     private bool _isEnd = false;
 
     private List<GameObject> clones = new List<GameObject>();
-    
+
+ 
     //最初のノードの位置をプレイヤーの初期位置に設定する
     void Start()
     {
@@ -88,7 +89,14 @@ public class PlayerMove : MonoBehaviour
 
     void Update()
     {
-        float _nowSpeed = _speed + _speed * _accelerationRate * _mike.GetComponent<MikeInput>().nowVolume;
+        //実際の移動速度
+        float _nowSpeed = _speed;
+        float _mikeVolume = _mike.GetComponent<MikeInput>().nowVolume;
+
+        //マイクが拾った音が一定量以上じゃないとスピードに反映しない
+        if (_mikeVolume > 0.5f)
+            _nowSpeed += _speed * _accelerationRate * _mikeVolume;
+
         if (_isSetTarget)
         {
             //ノード間の距離
@@ -103,6 +111,12 @@ public class PlayerMove : MonoBehaviour
         else
         {
             transform.position += new Vector3(_nowSpeed / 10f, -0.05f, 0);
+        }
+
+        //画面下に行ったら
+        if (transform.position.y < -5.0f)
+        {
+            _respawn();
         }
 
         Debug.Log(_nowSpeed);
@@ -252,33 +266,39 @@ public class PlayerMove : MonoBehaviour
         {
             _respawnPosition = col.transform.position;
         }
-        
+
         //チェックポイント以外のとき
         else
         {
-            _dataManager.GetComponent<Score>().AddCount();
-            //今登録されているノードをリセット
-            while (_nodePosition.Count > 0)
-            {
-                _nodePosition.RemoveAt(0);
-            }
-
-            _rate = 0;
-
-            _isSetTarget = false;
-
-            //リスポーン地点に移動
-            transform.position = _respawnPosition;
-
-            foreach (var clone in clones)
-            {
-                Destroy(clone);
-            }
-
-            while (clones.Count > 0) {
-                clones.RemoveAt(0);
-            }
-
+            _respawn();
         }
+    }
+
+    void _respawn()
+    {
+        _dataManager.GetComponent<Score>().AddCount();
+        //今登録されているノードをリセット
+        while (_nodePosition.Count > 0)
+        {
+            _nodePosition.RemoveAt(0);
+        }
+
+        _rate = 0;
+
+        _isSetTarget = false;
+
+        //リスポーン地点に移動
+        transform.position = _respawnPosition;
+
+        foreach (var clone in clones)
+        {
+            Destroy(clone);
+        }
+
+        while (clones.Count > 0)
+        {
+            clones.RemoveAt(0);
+        }
+
     }
 }
