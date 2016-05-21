@@ -113,8 +113,8 @@ public class PlayerMove : MonoBehaviour
             transform.position += new Vector3(_nowSpeed / 10f, -0.05f, 0);
         }
 
-        //画面下に行ったら
-        if (transform.position.y < -5.0f)
+        //画面外に行ったら
+        if (Mathf.Abs(transform.position.y) >= 4.8f)
         {
             _respawn();
         }
